@@ -1,0 +1,84 @@
+#include "proxyormvalue.h"
+
+QVariant ProxyOrm::ProxyOrmValue::value()
+{
+    return mValue;
+}
+
+ProxyOrm::ProxyOrmValue::ProxyOrmValue(QAbstractItemModel *sourceModel,
+                                       TypeAggregate type,
+                                       int role,
+                                       QObject *parent)
+    : QObject(parent)
+    , sourceModel(sourceModel)
+    , type(type)
+    , role(role)
+{
+    connect(sourceModel, &QAbstractItemModel::modelReset, this, &ProxyOrmValue::invalidate);
+    connect(sourceModel, &QAbstractItemModel::rowsInserted, this, &ProxyOrmValue::invalidate);
+    connect(sourceModel, &QAbstractItemModel::rowsRemoved, this, &ProxyOrmValue::invalidate);
+    connect(sourceModel, &QAbstractItemModel::dataChanged, this, &ProxyOrmValue::invalidate);
+}
+
+void ProxyOrm::ProxyOrmValue::where(int whereRole, Where::TypeComparison type, QVariant condition)
+{
+    whereMap.insert(whereRole, Where{type, condition});
+}
+
+void ProxyOrm::ProxyOrmValue::invalidate()
+{
+    filteredIndex.clear();
+    for (int i = 0; i < sourceModel->rowCount(); i++) {
+        if (!whereMap.empty()) {
+            bool include = true;
+            for (auto [key, where] : whereMap.asKeyValueRange()) {
+                auto value = sourceModel->data(sourceModel->index(i, 0), key);
+                if (!where.isAccepted(value)) {
+                    include = false;
+                }
+            }
+            if (include) {
+                filteredIndex.append(sourceModel->index(i, 0));
+            }
+        } else {
+            filteredIndex.append(sourceModel->index(i, 0));
+        }
+    }
+
+    if (type == TypeAggregate::Count) {
+        mValue = filteredIndex.count();
+    } else if (type == TypeAggregate::Sum) {
+        double sum = 0;
+        for (int i = 0; i < filteredIndex.count(); i++) {
+            auto index = filteredIndex.at(i);
+            sum += sourceModel->data(index, role).toDouble();
+        }
+        mValue = sum;
+    } else if (type == TypeAggregate::Avg) {
+        double sum = 0;
+        for (int i = 0; i < filteredIndex.count(); i++) {
+            auto index = filteredIndex.at(i);
+            sum += sourceModel->data(index, role).toDouble();
+        }
+        mValue = sum / sourceModel->rowCount();
+    } else if (type == TypeAggregate::Min) {
+        double min = sourceModel->data(filteredIndex.at(0), role).toDouble();
+        for (int i = 1; i < filteredIndex.count(); i++) {
+            auto index = filteredIndex.at(i);
+            if (min > sourceModel->data(index, role).toDouble()) {
+                min = sourceModel->data(index, role).toDouble();
+            }
+        }
+        mValue = min;
+    } else if (type == TypeAggregate::Max) {
+        double max = sourceModel->data(filteredIndex.at(0), role).toDouble();
+        for (int i = 1; i < filteredIndex.count(); i++) {
+            auto index = filteredIndex.at(i);
+            if (max < sourceModel->data(index, role).toDouble()) {
+                max = sourceModel->data(index, role).toDouble();
+            }
+        }
+        mValue = max;
+    }
+    emit changed();
+}
