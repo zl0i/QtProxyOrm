@@ -152,6 +152,11 @@ bool ProxyOrm::ProxyOrmModel::isSortGroupFilterRole(QList<int> roles)
 
 void ProxyOrm::ProxyOrmModel::sourceChanged(QList<int> role)
 {
+    if (!mEnabled) {
+        needToInvalidate = true;
+        return;
+    }
+
     if (isSortGroupFilterRole(role)) {
         qDebug() << "source changed -> invalidate";
         invalidate();
@@ -163,6 +168,11 @@ void ProxyOrm::ProxyOrmModel::sourceChanged(QList<int> role)
 
 void ProxyOrm::ProxyOrmModel::invalidate()
 {
+    if (!mEnabled) {
+        needToInvalidate = true;
+        return;
+    }
+
     qDebug() << "invalidate";
 
     beginSoftResetModel();
@@ -215,4 +225,12 @@ void ProxyOrm::ProxyOrmModel::invalidate()
 
     qDebug() << "invalidate end" << sortedFilteredIndex.count();
     endSoftResetModel();
+}
+
+void ProxyOrm::ProxyOrmModel::enabled(bool enabled)
+{
+    this->mEnabled = enabled;
+    if (mEnabled && needToInvalidate) {
+        invalidate();
+    }
 }

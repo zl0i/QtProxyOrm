@@ -27,6 +27,11 @@ void ProxyOrm::ProxyOrmValue::where(int whereRole, Where::TypeComparison type, Q
 
 void ProxyOrm::ProxyOrmValue::invalidate()
 {
+    if (!mEnabled) {
+        needToInvalidate = true;
+        return;
+    }
+
     filteredIndex.clear();
     for (int i = 0; i < sourceModel->rowCount(); i++) {
         if (!whereMap.empty()) {
@@ -81,4 +86,12 @@ void ProxyOrm::ProxyOrmValue::invalidate()
         mValue = max;
     }
     emit changed();
+}
+
+void ProxyOrm::ProxyOrmValue::enabled(bool enabled)
+{
+    this->mEnabled = enabled;
+    if (mEnabled && needToInvalidate) {
+        invalidate();
+    }
 }

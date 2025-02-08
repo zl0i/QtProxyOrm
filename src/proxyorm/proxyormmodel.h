@@ -46,6 +46,8 @@ protected:
     void sort(int role, Qt::SortOrder type) override;
     void groupBy(int role);
 
+    void enabled(bool enabled);
+
 private:
     const QAbstractListModel *sourceModel = nullptr;
 
@@ -86,6 +88,9 @@ private:
             emit dataChanged(topLeft, bottomRight);
         }
     }
+
+    bool mEnabled{true};
+    bool needToInvalidate{false};
 
 private slots:
     void sourceChanged(QList<int> role);

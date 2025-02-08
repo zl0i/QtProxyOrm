@@ -25,6 +25,8 @@ protected:
 
     void where(int whereRole, Where::TypeComparison type, QVariant condition);
 
+    void enabled(bool enabled);
+
 private:
     QAbstractItemModel *sourceModel;
     QVariant mValue;
@@ -33,6 +35,9 @@ private:
 
     TypeAggregate type;
     int role = -1;
+
+    bool mEnabled{true};
+    bool needToInvalidate{false};
 
 signals:
     void changed();
