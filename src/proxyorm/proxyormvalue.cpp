@@ -1,10 +1,5 @@
 #include "proxyormvalue.h"
 
-QVariant ProxyOrm::ProxyOrmValue::value()
-{
-    return mValue;
-}
-
 ProxyOrm::ProxyOrmValue::ProxyOrmValue(QAbstractItemModel *sourceModel,
                                        TypeAggregate type,
                                        int role,
@@ -84,6 +79,8 @@ void ProxyOrm::ProxyOrmValue::invalidate()
             }
         }
         mValue = max;
+    } else if (type == TypeAggregate::Custom) {
+        mValue = customArggregate(filteredIndex);
     }
     emit changed();
 }
@@ -94,4 +91,14 @@ void ProxyOrm::ProxyOrmValue::enabled(bool enabled)
     if (mEnabled && needToInvalidate) {
         invalidate();
     }
+}
+
+QVariant ProxyOrm::ProxyOrmValue::value()
+{
+    return mValue;
+}
+
+QVariant ProxyOrm::ProxyOrmValue::customArggregate(const QList<QModelIndex> &)
+{
+    return QVariant{};
 }

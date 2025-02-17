@@ -13,7 +13,7 @@ class ProxyOrmValue : public QObject
     Q_OBJECT
     Q_PROPERTY(QVariant value READ value NOTIFY changed FINAL)
 public:
-    enum TypeAggregate { Count = 0, Sum, Avg, Min, Max };
+    enum TypeAggregate { Count = 0, Sum, Avg, Min, Max, Custom };
 
     QVariant value();
 
@@ -24,11 +24,13 @@ protected:
                   QObject *parent = nullptr);
 
     void where(int whereRole, Where::TypeComparison type, QVariant condition);
-
     void enabled(bool enabled);
 
-private:
+    virtual QVariant customArggregate(const QList<QModelIndex> &list);
+
     QAbstractItemModel *sourceModel;
+
+private:
     QVariant mValue;
     QMap<int, Where> whereMap;
     QList<QModelIndex> filteredIndex;
