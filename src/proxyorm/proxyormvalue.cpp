@@ -12,7 +12,14 @@ ProxyOrm::ProxyOrmValue::ProxyOrmValue(QAbstractItemModel *sourceModel,
     connect(sourceModel, &QAbstractItemModel::modelReset, this, &ProxyOrmValue::invalidate);
     connect(sourceModel, &QAbstractItemModel::rowsInserted, this, &ProxyOrmValue::invalidate);
     connect(sourceModel, &QAbstractItemModel::rowsRemoved, this, &ProxyOrmValue::invalidate);
-    connect(sourceModel, &QAbstractItemModel::dataChanged, this, &ProxyOrmValue::invalidate);
+    connect(sourceModel,
+            &QAbstractItemModel::dataChanged,
+            this,
+            [this](const QModelIndex &, const QModelIndex &, const QList<int> &roles) {
+                if (roles.isEmpty() || roles.contains(this->role)) {
+                    invalidate();
+                }
+            });
 }
 
 void ProxyOrm::ProxyOrmValue::where(int whereRole, Where::TypeComparison type, QVariant condition)
