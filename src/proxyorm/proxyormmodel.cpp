@@ -9,32 +9,33 @@ ProxyOrm::ProxyOrmModel::ProxyOrmModel(QAbstractListModel *sourceModel,
 {
     ProxyOrm::FromSource *source = new ProxyOrm::FromSource(sourceModel, roles);
 
-    for (auto role : roles) {
+    for (const auto &role : std::as_const(roles)) {
         sourceMap.insert(role, source);
     }
 
-    connect(sourceModel, &QAbstractListModel::modelReset, [this, source]() {
+    connect(sourceModel, &QAbstractListModel::modelReset, this, [this, source]() {
         source->invalidateCache();
         invalidate();
     });
 
-    connect(sourceModel, &QAbstractListModel::rowsInserted, [this, source]() {
+    connect(sourceModel, &QAbstractListModel::rowsInserted, this, [this, source]() {
         source->invalidateCache();
         invalidate();
     });
-    connect(sourceModel, &QAbstractListModel::rowsRemoved, [this, source]() {
+    connect(sourceModel, &QAbstractListModel::rowsRemoved, this, [this, source]() {
         source->invalidateCache();
         invalidate();
     });
-    connect(sourceModel, &QAbstractListModel::dataChanged, [this, source]() {
+    connect(sourceModel, &QAbstractListModel::dataChanged, this, [this, source]() {
         source->invalidateCache();
         invalidate();
     });
 }
 
-void ProxyOrm::ProxyOrmModel::addSource(ISource *source)
+void ProxyOrm::ProxyOrmModel::addSource(const ISource *source)
 {
-    for (auto role : source->roles()) {
+    const auto &roles = source->roles();
+    for (const auto &role : roles) {
         sourceMap.insert(role, source);
     }
     connect(source, &ISource::changed, this, &ProxyOrmModel::sourceChanged);
@@ -123,7 +124,7 @@ void ProxyOrm::ProxyOrmModel::quickSortRecursive(int low, int high)
     }
 }
 
-bool ProxyOrm::ProxyOrmModel::isSortGroupFilterRole(int role)
+bool ProxyOrm::ProxyOrmModel::isSortGroupFilterRole(int role) const
 {
     if (role == sortRole) {
         return true;
@@ -134,7 +135,7 @@ bool ProxyOrm::ProxyOrmModel::isSortGroupFilterRole(int role)
     return whereMap.contains(role);
 }
 
-bool ProxyOrm::ProxyOrmModel::isSortGroupFilterRole(QList<int> roles)
+bool ProxyOrm::ProxyOrmModel::isSortGroupFilterRole(QList<int> roles) const
 {
     if (roles.contains(sortRole)) {
         return true;
@@ -158,10 +159,8 @@ void ProxyOrm::ProxyOrmModel::sourceChanged(QList<int> role)
     }
 
     if (isSortGroupFilterRole(role)) {
-        qDebug() << "source changed -> invalidate";
         invalidate();
     } else {
-        qDebug() << "source changed -> dataChanged";
         emit dataChanged(this->index(0, 0), this->index(this->rowCount() - 1, 0), role);
     }
 }
@@ -172,8 +171,6 @@ void ProxyOrm::ProxyOrmModel::invalidate()
         needToInvalidate = true;
         return;
     }
-
-    qDebug() << "invalidate";
 
     beginSoftResetModel();
 
@@ -213,8 +210,7 @@ void ProxyOrm::ProxyOrmModel::invalidate()
         }
 
         sortedFilteredIndex.clear();
-        // Переносим сгруппированные индексы в общий список
-        for (const auto &group : groups) {
+        for (const auto &group : std::as_const(groups)) {
             sortedFilteredIndex.append(group.at(0));
         }
     }
@@ -222,8 +218,6 @@ void ProxyOrm::ProxyOrmModel::invalidate()
     if (sortedFilteredIndex.count() > 1 && sortRole != -1) {
         quickSortRecursive(0, rowCount() - 1);
     }
-
-    qDebug() << "invalidate end" << sortedFilteredIndex.count();
     endSoftResetModel();
 }
 

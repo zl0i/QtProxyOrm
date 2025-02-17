@@ -37,7 +37,7 @@ protected:
                            QMap<int, int> roles,
                            QObject *parent = nullptr);
 
-    void addSource(ISource *source);
+    void addSource(const ISource *source);
 
     void andWhere(int whereRole, Where where);
     void andWhere(int whereRole, OrWhere where);
@@ -51,7 +51,7 @@ protected:
 private:
     const QAbstractListModel *sourceModel = nullptr;
 
-    QMap<int, ISource *> sourceMap;
+    QMap<int, const ISource *> sourceMap;
 
     QMap<int, OrWhere> whereMap;
 
@@ -65,9 +65,9 @@ private:
     int partition(int low, int high);
     void quickSortRecursive(int low, int high);
 
-    bool isSortGroupFilterRole(int role);
-    bool isSortGroupFilterRole(QList<int> role);
-    bool isWhereRole();
+    bool isSortGroupFilterRole(int role) const;
+    bool isSortGroupFilterRole(QList<int> role) const;
+    bool isWhereRole() const;
 
     int oldSize = 0;
     void beginSoftResetModel() { oldSize = sortedFilteredIndex.count(); }
