@@ -27,6 +27,41 @@ void ProxyOrm::ProxyOrmValue::invalidate()
         return;
     }
 
+    if (isAsync) {
+        QtConcurrent::run(QThreadPool::globalInstance(), [this]() {
+            performInvalidation();
+        }).then(qApp, [this]() { emit changed(); });
+    } else {
+        performInvalidation();
+        emit changed();
+    }
+}
+
+void ProxyOrm::ProxyOrmValue::enabled(bool enabled)
+{
+    this->mEnabled = enabled;
+    if (mEnabled && needToInvalidate) {
+        invalidate();
+    }
+}
+
+void ProxyOrm::ProxyOrmValue::enabledAsync(bool enabled)
+{
+    isAsync = enabled;
+}
+
+QVariant ProxyOrm::ProxyOrmValue::value()
+{
+    return mValue;
+}
+
+QVariant ProxyOrm::ProxyOrmValue::customArggregate(const QList<QModelIndex> &)
+{
+    return QVariant{};
+}
+
+void ProxyOrm::ProxyOrmValue::performInvalidation()
+{
     filteredIndex.clear();
     for (int i = 0; i < sourceModel->rowCount(); i++) {
         if (!whereMap.empty()) {
@@ -82,23 +117,4 @@ void ProxyOrm::ProxyOrmValue::invalidate()
     } else if (type == TypeAggregate::Custom) {
         mValue = customArggregate(filteredIndex);
     }
-    emit changed();
-}
-
-void ProxyOrm::ProxyOrmValue::enabled(bool enabled)
-{
-    this->mEnabled = enabled;
-    if (mEnabled && needToInvalidate) {
-        invalidate();
-    }
-}
-
-QVariant ProxyOrm::ProxyOrmValue::value()
-{
-    return mValue;
-}
-
-QVariant ProxyOrm::ProxyOrmValue::customArggregate(const QList<QModelIndex> &)
-{
-    return QVariant{};
 }

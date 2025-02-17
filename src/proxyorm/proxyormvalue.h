@@ -3,6 +3,7 @@
 
 #include <QAbstractItemModel>
 #include <QObject>
+#include <QtConcurrent/QtConcurrent>
 
 #include "where.h"
 
@@ -25,6 +26,7 @@ protected:
 
     void where(int whereRole, Where::TypeComparison type, QVariant condition);
     void enabled(bool enabled);
+    void enabledAsync(bool enabled);
 
     virtual QVariant customArggregate(const QList<QModelIndex> &list);
 
@@ -40,6 +42,9 @@ private:
 
     bool mEnabled{true};
     bool needToInvalidate{false};
+    bool isAsync{false};
+
+    void performInvalidation();
 
 signals:
     void changed();
