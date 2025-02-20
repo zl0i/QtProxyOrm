@@ -16,7 +16,7 @@ ProxyOrm::ProxyOrmValue::ProxyOrmValue(const QAbstractItemModel *sourceModel,
             &QAbstractItemModel::dataChanged,
             this,
             [this](const QModelIndex &, const QModelIndex &, const QList<int> &roles) {
-                if (roles.isEmpty() || roles.contains(this->role)) {
+                if (roles.isEmpty() || isAggWhereRole(roles)) {
                     invalidate();
                 }
             });
@@ -153,4 +153,12 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
     } else if (type == TypeAggregate::Custom) {
         mValue = customArggregate(filteredIndex);
     }
+}
+
+bool ProxyOrm::ProxyOrmValue::isAggWhereRole(const QList<int> &roles) const
+{
+    return roles.contains(this->role)
+           || std::any_of(whereMap.keyBegin(), whereMap.keyEnd(), [&roles](const auto &r) {
+                  return roles.contains(r);
+              });
 }

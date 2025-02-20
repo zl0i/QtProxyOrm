@@ -47,6 +47,8 @@ private:
 
     void performInvalidation();
 
+    bool isAggWhereRole(const QList<int> &roles) const;
+
 signals:
     void changed();
 
