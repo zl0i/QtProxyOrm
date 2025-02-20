@@ -17,6 +17,7 @@ public:
     enum TypeAggregate { Count = 0, Sum, Avg, Min, Max, Custom };
 
     QVariant value();
+    void enabled(bool enabled);
 
 protected:
     ProxyOrmValue(const QAbstractItemModel *sourceModel,
@@ -25,9 +26,7 @@ protected:
                   QObject *parent = nullptr);
 
     void where(int whereRole, Where::TypeComparison type, QVariant condition);
-    void enabled(bool enabled);
     void enabledAsync(bool enabled);
-
     virtual QVariant customArggregate(const QList<QModelIndex> &list);
 
     const QAbstractItemModel *sourceModel;
@@ -35,8 +34,10 @@ protected:
 private:
     QVariant mValue;
     QMap<int, Where> whereMap;
-    QList<QModelIndex> filteredIndex;
-    QFuture<void> futureInvalidate;
+    bool isStart = false;
+    bool isCancel = false;
+
+    QFuture<void> futureInvalidate = QtFuture::makeReadyVoidFuture();
 
     const TypeAggregate type;
     const int role = -1;
@@ -45,7 +46,7 @@ private:
     bool needToInvalidate{false};
     bool isAsync{false};
 
-    void performInvalidation();
+    QVariant performInvalidation();
 
     bool isAggWhereRole(const QList<int> &roles) const;
 

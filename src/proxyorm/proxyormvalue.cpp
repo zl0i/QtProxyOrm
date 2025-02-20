@@ -34,17 +34,29 @@ void ProxyOrm::ProxyOrmValue::invalidate()
         return;
     }
 
-    if (futureInvalidate.isRunning()) {
+    if (isStart) {
+        isCancel = true;
         futureInvalidate.cancel();
         futureInvalidate.waitForFinished();
+        isCancel = false;
     }
 
     if (isAsync) {
+        isStart = true;
         futureInvalidate = QtConcurrent::run(QThreadPool::globalInstance(), [this]() {
-                               performInvalidation();
-                           }).then(qApp, [this]() { emit changed(); });
+                               QPair<bool, QVariant> pair;
+                               pair.second = performInvalidation();
+                               pair.first = !isCancel;
+                               return pair;
+                           }).then([this](QPair<bool, QVariant> pair) {
+            if (pair.first) {
+                mValue = pair.second;
+                emit changed();
+            }
+        });
     } else {
-        performInvalidation();
+        mValue = performInvalidation();
+        futureInvalidate = QtFuture::makeReadyVoidFuture();
         emit changed();
     }
 }
@@ -60,6 +72,7 @@ void ProxyOrm::ProxyOrmValue::enabled(bool enabled)
 void ProxyOrm::ProxyOrmValue::enabledAsync(bool enabled)
 {
     isAsync = enabled;
+    futureInvalidate = QtFuture::makeReadyVoidFuture();
 }
 
 QVariant ProxyOrm::ProxyOrmValue::value()
@@ -72,13 +85,10 @@ QVariant ProxyOrm::ProxyOrmValue::customArggregate(const QList<QModelIndex> &)
     return QVariant{};
 }
 
-void ProxyOrm::ProxyOrmValue::performInvalidation()
+QVariant ProxyOrm::ProxyOrmValue::performInvalidation()
 {
-    filteredIndex.clear();
-    for (int i = 0; i < sourceModel->rowCount(); i++) {
-        if (futureInvalidate.isCanceled()) {
-            return;
-        }
+    QList<QModelIndex> filteredIndex;
+    for (int i = 0; i < sourceModel->rowCount() && !isCancel; i++) {
         if (!whereMap.empty()) {
             bool include = true;
             for (auto [key, where] : whereMap.asKeyValueRange()) {
@@ -96,63 +106,51 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
     }
 
     if (type == TypeAggregate::Count) {
-        mValue = filteredIndex.count();
+        return filteredIndex.count();
     } else if (type == TypeAggregate::Sum) {
         double sum = 0;
-        for (int i = 0; i < filteredIndex.count(); i++) {
-            if (futureInvalidate.isCanceled()) {
-                return;
-            }
-
+        for (int i = 0; i < filteredIndex.count() && !isCancel; i++) {
             auto index = filteredIndex.at(i);
             sum += sourceModel->data(index, role).toDouble();
         }
-        mValue = sum;
+        return sum;
     } else if (type == TypeAggregate::Avg) {
         double sum = 0;
-        for (int i = 0; i < filteredIndex.count(); i++) {
-            if (futureInvalidate.isCanceled()) {
-                return;
-            }
+        for (int i = 0; i < filteredIndex.count() && !isCancel; i++) {
             auto index = filteredIndex.at(i);
             sum += sourceModel->data(index, role).toDouble();
         }
-        mValue = sum / filteredIndex.count();
+        return sum / filteredIndex.count();
     } else if (type == TypeAggregate::Min) {
         if (filteredIndex.isEmpty()) {
-            mValue = QVariant();
+            return QVariant();
         } else {
             double min = sourceModel->data(filteredIndex.at(0), role).toDouble();
-            for (int i = 1; i < filteredIndex.count(); i++) {
+            for (int i = 1; i < filteredIndex.count() && !isCancel; i++) {
                 auto index = filteredIndex.at(i);
-                if (min > sourceModel->data(index, role).toDouble()) {
-                    if (futureInvalidate.isCanceled()) {
-                        return;
-                    }
+                if (min > sourceModel->data(index, role).toDouble()) {                    
                     min = sourceModel->data(index, role).toDouble();
                 }
             }
-            mValue = min;
+            return min;
         }
     } else if (type == TypeAggregate::Max) {
         if (filteredIndex.isEmpty()) {
             mValue = QVariant();
         } else {
             double max = sourceModel->data(filteredIndex.at(0), role).toDouble();
-            for (int i = 1; i < filteredIndex.count(); i++) {
+            for (int i = 1; i < filteredIndex.count() && !isCancel; i++) {
                 auto index = filteredIndex.at(i);
-                if (max < sourceModel->data(index, role).toDouble()) {
-                    if (futureInvalidate.isCanceled()) {
-                        return;
-                    }
+                if (max < sourceModel->data(index, role).toDouble()) {                   
                     max = sourceModel->data(index, role).toDouble();
                 }
             }
-            mValue = max;
+            return max;
         }
     } else if (type == TypeAggregate::Custom) {
-        mValue = customArggregate(filteredIndex);
+        return customArggregate(filteredIndex);
     }
+    return QVariant{};
 }
 
 bool ProxyOrm::ProxyOrmValue::isAggWhereRole(const QList<int> &roles) const
