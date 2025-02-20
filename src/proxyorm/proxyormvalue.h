@@ -19,9 +19,9 @@ public:
     QVariant value();
 
 protected:
-    ProxyOrmValue(QAbstractItemModel *sourceModel,
-                  TypeAggregate type,
-                  int role,
+    ProxyOrmValue(const QAbstractItemModel *sourceModel,
+                  const TypeAggregate type,
+                  const int role,
                   QObject *parent = nullptr);
 
     void where(int whereRole, Where::TypeComparison type, QVariant condition);
@@ -30,15 +30,15 @@ protected:
 
     virtual QVariant customArggregate(const QList<QModelIndex> &list);
 
-    QAbstractItemModel *sourceModel;
+    const QAbstractItemModel *sourceModel;
 
 private:
     QVariant mValue;
     QMap<int, Where> whereMap;
     QList<QModelIndex> filteredIndex;
 
-    TypeAggregate type;
-    int role = -1;
+    const TypeAggregate type;
+    const int role = -1;
 
     bool mEnabled{true};
     bool needToInvalidate{false};

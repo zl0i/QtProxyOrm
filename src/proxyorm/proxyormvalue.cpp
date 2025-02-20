@@ -1,8 +1,8 @@
 #include "proxyormvalue.h"
 
-ProxyOrm::ProxyOrmValue::ProxyOrmValue(QAbstractItemModel *sourceModel,
-                                       TypeAggregate type,
-                                       int role,
+ProxyOrm::ProxyOrmValue::ProxyOrmValue(const QAbstractItemModel *sourceModel,
+                                       const TypeAggregate type,
+                                       const int role,
                                        QObject *parent)
     : QObject(parent)
     , sourceModel(sourceModel)
