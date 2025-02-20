@@ -119,29 +119,37 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
         }
         mValue = sum / sourceModel->rowCount();
     } else if (type == TypeAggregate::Min) {
-        double min = sourceModel->data(filteredIndex.at(0), role).toDouble();
-        for (int i = 1; i < filteredIndex.count(); i++) {
-            auto index = filteredIndex.at(i);
-            if (min > sourceModel->data(index, role).toDouble()) {
-                if (futureInvalidate.isCanceled()) {
-                    return;
+        if (filteredIndex.isEmpty()) {
+            mValue = QVariant();
+        } else {
+            double min = sourceModel->data(filteredIndex.at(0), role).toDouble();
+            for (int i = 1; i < filteredIndex.count(); i++) {
+                auto index = filteredIndex.at(i);
+                if (min > sourceModel->data(index, role).toDouble()) {
+                    if (futureInvalidate.isCanceled()) {
+                        return;
+                    }
+                    min = sourceModel->data(index, role).toDouble();
                 }
-                min = sourceModel->data(index, role).toDouble();
             }
+            mValue = min;
         }
-        mValue = min;
     } else if (type == TypeAggregate::Max) {
-        double max = sourceModel->data(filteredIndex.at(0), role).toDouble();
-        for (int i = 1; i < filteredIndex.count(); i++) {
-            auto index = filteredIndex.at(i);
-            if (max < sourceModel->data(index, role).toDouble()) {
-                if (futureInvalidate.isCanceled()) {
-                    return;
+        if (filteredIndex.isEmpty()) {
+            mValue = QVariant();
+        } else {
+            double max = sourceModel->data(filteredIndex.at(0), role).toDouble();
+            for (int i = 1; i < filteredIndex.count(); i++) {
+                auto index = filteredIndex.at(i);
+                if (max < sourceModel->data(index, role).toDouble()) {
+                    if (futureInvalidate.isCanceled()) {
+                        return;
+                    }
+                    max = sourceModel->data(index, role).toDouble();
                 }
-                max = sourceModel->data(index, role).toDouble();
             }
+            mValue = max;
         }
-        mValue = max;
     } else if (type == TypeAggregate::Custom) {
         mValue = customArggregate(filteredIndex);
     }
