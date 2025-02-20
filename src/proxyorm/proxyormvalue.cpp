@@ -117,7 +117,7 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
             auto index = filteredIndex.at(i);
             sum += sourceModel->data(index, role).toDouble();
         }
-        mValue = sum / sourceModel->rowCount();
+        mValue = sum / filteredIndex.count();
     } else if (type == TypeAggregate::Min) {
         if (filteredIndex.isEmpty()) {
             mValue = QVariant();
