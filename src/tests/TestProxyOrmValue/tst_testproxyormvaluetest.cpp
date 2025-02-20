@@ -81,7 +81,7 @@ void TestProxyOrmValueTest::testAvgWithFilter()
 {
     QStandardItemModel model(0, 1);
     TestProxyOrmValue proxy(&model, ProxyOrm::ProxyOrmValue::Avg, Qt::UserRole + 1);
-    proxy.where(Qt::UserRole + 2, ProxyOrm::Where::MoreThen, 25); // Фильтр: возраст > 25
+    proxy.where(Qt::UserRole + 2, ProxyOrm::Where::GreaterThen, 25); // Фильтр: возраст > 25
     model.insertRows(0, 3);
     model.setData(model.index(0, 0), 20, Qt::UserRole + 2);   // Возраст
     model.setData(model.index(0, 0), 10.0, Qt::UserRole + 1); // Значение

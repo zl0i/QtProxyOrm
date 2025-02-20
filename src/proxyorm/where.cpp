@@ -20,6 +20,12 @@ ProxyOrm::Where &ProxyOrm::Where::operator=(const Where &other)
 
 bool ProxyOrm::Where::isAccepted(QVariant value) const
 {
+    if (condition.typeId() != value.typeId()) {
+        qWarning() << "Incompatible types for comparison: condition type =" << condition.typeId()
+                   << ", value type =" << value.typeId();
+        return false;
+    }
+
     if (comparison == TypeComparison::IsNull && value.isNull()) {
         return true;
     }
@@ -33,16 +39,14 @@ bool ProxyOrm::Where::isAccepted(QVariant value) const
         if (condition.typeId() != QMetaType::QString && value.typeId() != QMetaType::QString)
             return false;
 
-        QRegularExpression reg(condition.toString());
-        return reg.match(value.toString()).hasMatch();
+        return value.toString().contains(condition.toString());
     }
 
     if (comparison == TypeComparison::ILike) {
         if (condition.typeId() != QMetaType::QString && value.typeId() != QMetaType::QString)
             return false;
 
-        QRegularExpression reg(condition.toString());
-        return !reg.match(value.toString()).hasMatch();
+        return !value.toString().contains(condition.toString());
     }
 
     switch (value.typeId()) {
@@ -65,10 +69,10 @@ bool ProxyOrm::Where::typedComparison(T a, T b) const
     if (comparison == TypeComparison::LessEqThen) {
         return a <= b;
     }
-    if (comparison == TypeComparison::MoreThen) {
+    if (comparison == TypeComparison::GreaterThen) {
         return a > b;
     }
-    if (comparison == TypeComparison::MoreEqThen) {
+    if (comparison == TypeComparison::GreaterEqThen) {
         return a >= b;
     }
     if (comparison == TypeComparison::Equals) {

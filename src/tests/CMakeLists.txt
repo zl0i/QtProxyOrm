@@ -1,0 +1,2 @@
+add_subdirectory(TestProxyOrmValue)
+add_subdirectory(TestWhere)

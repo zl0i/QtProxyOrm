@@ -14,8 +14,8 @@ public:
         NotEquals,
         LessThen,
         LessEqThen,
-        MoreThen,
-        MoreEqThen,
+        GreaterThen,
+        GreaterEqThen,
         IsNull,
         Like,
         ILike
