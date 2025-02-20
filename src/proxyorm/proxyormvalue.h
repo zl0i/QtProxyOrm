@@ -36,6 +36,7 @@ private:
     QVariant mValue;
     QMap<int, Where> whereMap;
     QList<QModelIndex> filteredIndex;
+    QFuture<void> futureInvalidate;
 
     const TypeAggregate type;
     const int role = -1;

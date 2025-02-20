@@ -34,10 +34,15 @@ void ProxyOrm::ProxyOrmValue::invalidate()
         return;
     }
 
+    if (futureInvalidate.isRunning()) {
+        futureInvalidate.cancel();
+        futureInvalidate.waitForFinished();
+    }
+
     if (isAsync) {
-        QtConcurrent::run(QThreadPool::globalInstance(), [this]() {
-            performInvalidation();
-        }).then(qApp, [this]() { emit changed(); });
+        futureInvalidate = QtConcurrent::run(QThreadPool::globalInstance(), [this]() {
+                               performInvalidation();
+                           }).then(qApp, [this]() { emit changed(); });
     } else {
         performInvalidation();
         emit changed();
@@ -71,6 +76,9 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
 {
     filteredIndex.clear();
     for (int i = 0; i < sourceModel->rowCount(); i++) {
+        if (futureInvalidate.isCanceled()) {
+            return;
+        }
         if (!whereMap.empty()) {
             bool include = true;
             for (auto [key, where] : whereMap.asKeyValueRange()) {
@@ -92,6 +100,10 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
     } else if (type == TypeAggregate::Sum) {
         double sum = 0;
         for (int i = 0; i < filteredIndex.count(); i++) {
+            if (futureInvalidate.isCanceled()) {
+                return;
+            }
+
             auto index = filteredIndex.at(i);
             sum += sourceModel->data(index, role).toDouble();
         }
@@ -99,6 +111,9 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
     } else if (type == TypeAggregate::Avg) {
         double sum = 0;
         for (int i = 0; i < filteredIndex.count(); i++) {
+            if (futureInvalidate.isCanceled()) {
+                return;
+            }
             auto index = filteredIndex.at(i);
             sum += sourceModel->data(index, role).toDouble();
         }
@@ -108,6 +123,9 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
         for (int i = 1; i < filteredIndex.count(); i++) {
             auto index = filteredIndex.at(i);
             if (min > sourceModel->data(index, role).toDouble()) {
+                if (futureInvalidate.isCanceled()) {
+                    return;
+                }
                 min = sourceModel->data(index, role).toDouble();
             }
         }
@@ -117,6 +135,9 @@ void ProxyOrm::ProxyOrmValue::performInvalidation()
         for (int i = 1; i < filteredIndex.count(); i++) {
             auto index = filteredIndex.at(i);
             if (max < sourceModel->data(index, role).toDouble()) {
+                if (futureInvalidate.isCanceled()) {
+                    return;
+                }
                 max = sourceModel->data(index, role).toDouble();
             }
         }
