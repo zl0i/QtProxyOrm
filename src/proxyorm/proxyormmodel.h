@@ -31,9 +31,10 @@ class ProxyOrmModel : public QAbstractListModel
 public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override final;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override final;
+    void enabled(bool enabled);
 
 protected:
-    explicit ProxyOrmModel(QAbstractListModel *sourceModel,
+    explicit ProxyOrmModel(const QAbstractListModel *sourceModel,
                            QMap<int, int> roles,
                            QObject *parent = nullptr);
 
@@ -45,8 +46,6 @@ protected:
     void clearWhere();
     void sort(int role, Qt::SortOrder type) override;
     void groupBy(int role);
-
-    void enabled(bool enabled);
 
 private:
     const QAbstractListModel *sourceModel = nullptr;

@@ -23,6 +23,8 @@ public:
 protected:
     QVariant templateData(int row, int role) const override;
 
+    virtual void invalidate();
+
 private:
     const QAbstractListModel *sourceModel;
     const int sourceRole = 0; // роль по которой сравниваем в base модели

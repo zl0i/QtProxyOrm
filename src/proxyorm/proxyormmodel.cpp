@@ -1,7 +1,7 @@
 #include "proxyormmodel.h"
 #include "fromsource.h"
 
-ProxyOrm::ProxyOrmModel::ProxyOrmModel(QAbstractListModel *sourceModel,
+ProxyOrm::ProxyOrmModel::ProxyOrmModel(const QAbstractListModel *sourceModel,
                                        QMap<int, int> roles,
                                        QObject *parent)
     : QAbstractListModel{parent}
@@ -60,10 +60,11 @@ QVariant ProxyOrm::ProxyOrmModel::data(const QModelIndex &index, int role) const
     int sourceRow = isFiltered ? sortedFilteredIndex.at(index.row()).row() : index.row();
 
     auto source = sourceMap.value(role);
-    if (source) {
-        return source->data(sourceRow, role);
+    if (!source) {
+        qWarning() << "No source found for role:" << role;
+        return QVariant{};
     }
-    return QVariant{};
+    return source->data(sourceRow, role);
 }
 
 void ProxyOrm::ProxyOrmModel::andWhere(int whereRole, Where where)

@@ -12,25 +12,10 @@ ProxyOrm::Join::Join(const QAbstractListModel *sourceModel,
     , joinRole(joinRole)
     , mapRoles(mapRoles)
 {
-    connect(joinModel, &QAbstractListModel::modelReset, [this]() {
-        invalidateCache();
-        emit changed(this->mapRoles.keys());
-    });
-
-    connect(joinModel, &QAbstractListModel::rowsInserted, [this]() {
-        invalidateCache();
-        emit changed(this->mapRoles.keys());
-    });
-
-    connect(joinModel, &QAbstractListModel::rowsRemoved, [this]() {
-        invalidateCache();
-        emit changed(this->mapRoles.keys());
-    });
-
-    connect(joinModel, &QAbstractListModel::dataChanged, [this]() {
-        invalidateCache();
-        emit changed(this->mapRoles.keys());
-    });
+    connect(joinModel, &QAbstractListModel::modelReset, this, &ProxyOrm::Join::invalidate);
+    connect(joinModel, &QAbstractListModel::rowsInserted, this, &ProxyOrm::Join::invalidate);
+    connect(joinModel, &QAbstractListModel::rowsRemoved, this, &ProxyOrm::Join::invalidate);
+    connect(joinModel, &QAbstractListModel::dataChanged, this, &ProxyOrm::Join::invalidate);
 }
 
 QVariant ProxyOrm::Join::templateData(int row, int role) const
@@ -45,6 +30,12 @@ QVariant ProxyOrm::Join::templateData(int row, int role) const
         }
     }
     return QVariant{};
+}
+
+void ProxyOrm::Join::invalidate()
+{
+    invalidateCache();
+    emit changed(this->mapRoles.keys());
 }
 
 QList<int> ProxyOrm::Join::roles() const
