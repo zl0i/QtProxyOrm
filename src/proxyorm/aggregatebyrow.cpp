@@ -129,5 +129,4 @@ bool ProxyOrm::AggregateByRow::isMoreComprasion(QVariant a, QVariant b) const
 void ProxyOrm::AggregateByRow::invalidate()
 {
     invalidateCache();
-    emit changed(roles());
 }

@@ -29,6 +29,9 @@ target_link_libraries(TestJoin PRIVATE Qt6::Test Qt6::Gui helpers proxyorm)
 add_executable(TestAggregate tst_testaggregatebyrow.cpp)
 target_link_libraries(TestAggregate PRIVATE Qt6::Test Qt6::Gui helpers proxyorm)
 
+add_executable(TestCase tst_testcase.cpp)
+target_link_libraries(TestCase PRIVATE Qt6::Test Qt6::Gui helpers proxyorm)
+
 add_test(NAME TestProxyOrmModel COMMAND TestProxyOrmModel)
 
 target_link_libraries(TestProxyOrmModel PRIVATE Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Gui proxyorm helpers)

@@ -12,7 +12,7 @@ class Case : public ProxyOrm::ISource
 {
     Q_OBJECT
 public:
-    Case(QAbstractListModel *sourceModel,
+    Case(const QAbstractListModel *sourceModel,
          int sourceRole,
          QList<QVariantPair> list,
          int role,
@@ -27,8 +27,11 @@ private:
     const QAbstractListModel *sourceModel;
     const int sourceRole;
     const int role;
-    const QList<QVariantPair> list;
+    QVariantHash map;
     const QVariant defaultValue;
+
+private slots:
+    void invalidate();
 };
 
 } // namespace ProxyOrm
