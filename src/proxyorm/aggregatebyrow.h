@@ -39,6 +39,9 @@ protected:
     T typedAggregate(T a, T b) const;
 
     bool isMoreComprasion(QVariant a, QVariant b) const;
+
+private slots:
+    void invalidate();
 };
 
 } // namespace ProxyOrm

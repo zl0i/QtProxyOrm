@@ -11,7 +11,12 @@ ProxyOrm::AggregateByRow::AggregateByRow(const QAbstractListModel *sourceModel,
     , aggregateRole(aggregateRole)
     , typeAggregate(type)
     , role(role)
-{}
+{
+    connect(sourceModel, &QAbstractListModel::modelReset, this, &AggregateByRow::invalidate);
+    connect(sourceModel, &QAbstractListModel::rowsInserted, this, &AggregateByRow::invalidate);
+    connect(sourceModel, &QAbstractListModel::rowsRemoved, this, &AggregateByRow::invalidate);
+    connect(sourceModel, &QAbstractListModel::dataChanged, this, &AggregateByRow::invalidate);
+}
 
 ProxyOrm::AggregateByRow::AggregateByRow(const AggregateByRow &other)
     : ISource()
@@ -52,7 +57,7 @@ QVariant ProxyOrm::AggregateByRow::aggregate(QVariant whereValue) const
     QVariant result{};
     int count = 0;
 
-    for (int i = 0; i < sourceModel->rowCount(); i++, count++) {
+    for (int i = 0; i < sourceModel->rowCount(); i++) {
         auto test = sourceModel->data(sourceModel->index(i, 0), sourceRole);
         if (test != whereValue) {
             continue;
@@ -61,6 +66,7 @@ QVariant ProxyOrm::AggregateByRow::aggregate(QVariant whereValue) const
         if (typeAggregate == TypeAggregate::Count) {
             result = result.toInt() + 1;
         } else if (typeAggregate == TypeAggregate::Sum || typeAggregate == TypeAggregate::Avg) {
+            count++;
             int type = value.typeId();
             switch (type) {
             case QMetaType::Int:
@@ -118,4 +124,10 @@ bool ProxyOrm::AggregateByRow::isMoreComprasion(QVariant a, QVariant b) const
         return a.toString() > b.toString();
     }
     return false;
+}
+
+void ProxyOrm::AggregateByRow::invalidate()
+{
+    invalidateCache();
+    emit changed(roles());
 }
