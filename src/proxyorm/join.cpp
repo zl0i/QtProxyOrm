@@ -20,6 +20,13 @@ ProxyOrm::Join::Join(const QAbstractListModel *sourceModel,
 
 QVariant ProxyOrm::Join::templateData(int row, int role) const
 {
+    if (!sourceModel || !joinModel || row < 0 || row >= sourceModel->rowCount()) {
+        return QVariant{};
+    }
+    if (!mapRoles.contains(role)) {
+        return QVariant{};
+    }
+
     auto sourceIndex = sourceModel->index(row, 0);
 
     for (int i = 0; i < joinModel->rowCount(); i++) {

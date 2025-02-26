@@ -23,6 +23,9 @@ target_link_libraries(TestProxyOrmModel PRIVATE Qt6::Test Qt6::Gui helpers proxy
 add_executable(TestFromSource tst_testfromsource.cpp)
 target_link_libraries(TestFromSource PRIVATE Qt6::Test Qt6::Gui helpers proxyorm)
 
+add_executable(TestJoin tst_testjoin.cpp)
+target_link_libraries(TestJoin PRIVATE Qt6::Test Qt6::Gui helpers proxyorm)
+
 add_test(NAME TestProxyOrmModel COMMAND TestProxyOrmModel)
 
 target_link_libraries(TestProxyOrmModel PRIVATE Qt${QT_VERSION_MAJOR}::Test Qt${QT_VERSION_MAJOR}::Gui proxyorm helpers)
