@@ -32,6 +32,8 @@ add_library(proxyorm STATIC
     proxyormmodel.h
     proxyormvalue.cpp
     proxyormvalue.h
+    indexedabstractmodel.h
+    joinindexed.h joinindexed.cpp
 )
 
 cmake_minimum_required(VERSION 3.16)
