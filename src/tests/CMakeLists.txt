@@ -11,4 +11,5 @@ target_link_libraries(helpers Qt6::Core Qt6::Gui proxyorm)
 add_subdirectory(TestProxyOrmValue)
 add_subdirectory(TestWhere)
 add_subdirectory(TestProxyOrmModel)
+add_subdirectory(Benchmark)
 
