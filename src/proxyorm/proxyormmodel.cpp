@@ -98,6 +98,11 @@ void ProxyOrm::ProxyOrmModel::groupBy(int role)
     groupByRole = role;
 }
 
+void ProxyOrm::ProxyOrmModel::enabledAsync(bool enabled)
+{
+    isAsync = enabled;
+}
+
 int ProxyOrm::ProxyOrmModel::partition(int low, int high)
 {
     QVariant pivot = data(index(high), sortRole);
@@ -152,6 +157,29 @@ bool ProxyOrm::ProxyOrmModel::isSortGroupFilterRole(QList<int> roles) const
     return false;
 }
 
+void ProxyOrm::ProxyOrmModel::beginSoftResetModel()
+{
+    oldSize = sortedFilteredIndex.count();
+}
+
+void ProxyOrm::ProxyOrmModel::endSoftResetModel()
+{
+    int diff = sortedFilteredIndex.count() - oldSize;
+    if (diff > 0) {
+        beginInsertRows(QModelIndex(), 0, diff - 1);
+        endInsertRows();
+    } else if (diff < 0) {
+        beginRemoveRows(QModelIndex(), 0, -diff - 1);
+        endRemoveRows();
+    }
+
+    if (sortedFilteredIndex.count() != 0) {
+        QModelIndex topLeft = index(0, 0);
+        QModelIndex bottomRight = index(sortedFilteredIndex.count() - 1, 0);
+        emit dataChanged(topLeft, bottomRight);
+    }
+}
+
 void ProxyOrm::ProxyOrmModel::sourceChanged(QList<int> role)
 {
     if (!mEnabled) {
@@ -166,15 +194,8 @@ void ProxyOrm::ProxyOrmModel::sourceChanged(QList<int> role)
     }
 }
 
-void ProxyOrm::ProxyOrmModel::invalidate()
+void ProxyOrm::ProxyOrmModel::performInvalidate()
 {
-    if (!mEnabled) {
-        needToInvalidate = true;
-        return;
-    }
-
-    beginSoftResetModel();
-
     isFiltered = false;
     sortedFilteredIndex.clear();
     for (int i = 0; i < sourceModel->rowCount(); i++) {
@@ -206,7 +227,6 @@ void ProxyOrm::ProxyOrmModel::invalidate()
                 auto list = groups.value(key);
                 list.append(index);
                 groups[key] = list;
-                // groups[key].append(index);
             }
         }
 
@@ -219,7 +239,41 @@ void ProxyOrm::ProxyOrmModel::invalidate()
     if (sortedFilteredIndex.count() > 1 && sortRole != -1) {
         quickSortRecursive(0, rowCount() - 1);
     }
-    endSoftResetModel();
+}
+
+void ProxyOrm::ProxyOrmModel::invalidate()
+{
+    if (!mEnabled) {
+        needToInvalidate = true;
+        return;
+    }
+
+    if (isStart) {
+        isCancel = true;
+        futureInvalidate.cancel();
+        futureInvalidate.waitForFinished();
+    }
+
+    if (isAsync) {
+        isStart = true;
+        if (!isCancel) {
+            beginSoftResetModel();
+            isCancel = false;
+        }
+        futureInvalidate = QtConcurrent::run(QThreadPool::globalInstance(), [this]() {
+                               performInvalidate();
+                           }).then([this]() {
+            if (!isCancel) {
+                endSoftResetModel();
+            }
+            isStart = false;
+        });
+
+    } else {
+        beginSoftResetModel();
+        performInvalidate();
+        endSoftResetModel();
+    }
 }
 
 void ProxyOrm::ProxyOrmModel::enabled(bool enabled)

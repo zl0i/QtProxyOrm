@@ -30,9 +30,9 @@ public:
         CaseRole,
     };
 
-    explicit OrderViewModel(QAbstractListModel *sourceModel,
-                            QAbstractListModel *userModel,
-                            QAbstractListModel *staffModel,
+    explicit OrderViewModel(const QAbstractListModel *sourceModel,
+                            const QAbstractListModel *userModel,
+                            const QAbstractListModel *staffModel,
                             QObject *parent = nullptr);
 
     QHash<int, QByteArray> roleNames() const;

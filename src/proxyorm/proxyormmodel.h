@@ -3,6 +3,7 @@
 
 #include <QAbstractListModel>
 #include <QObject>
+#include <QtConcurrent/QtConcurrent>
 
 #include "isource.h"
 #include "orwhere.h"
@@ -47,6 +48,9 @@ protected:
     void sort(int role, Qt::SortOrder type) override;
     void groupBy(int role);
 
+    void enabledAsync(bool enabled);
+    ;
+
 private:
     const QAbstractListModel *sourceModel = nullptr;
 
@@ -69,30 +73,20 @@ private:
     bool isWhereRole() const;
 
     int oldSize = 0;
-    void beginSoftResetModel() { oldSize = sortedFilteredIndex.count(); }
-    void endSoftResetModel()
-    {
-        int diff = sortedFilteredIndex.count() - oldSize;
-        if (diff > 0) {
-            beginInsertRows(QModelIndex(), 0, diff - 1);
-            endInsertRows();
-        } else if (diff < 0) {
-            beginRemoveRows(QModelIndex(), 0, -diff - 1);
-            endRemoveRows();
-        }
-
-        if (sortedFilteredIndex.count() != 0) {
-            QModelIndex topLeft = index(0, 0);
-            QModelIndex bottomRight = index(sortedFilteredIndex.count() - 1, 0);
-            emit dataChanged(topLeft, bottomRight);
-        }
-    }
+    void beginSoftResetModel();
+    void endSoftResetModel();
 
     bool mEnabled{true};
     bool needToInvalidate{false};
 
+    bool isAsync{false};
+    bool isStart{false};
+    bool isCancel{false};
+    QFuture<void> futureInvalidate = QtFuture::makeReadyVoidFuture();
+
 private slots:
     void sourceChanged(QList<int> role);
+    void performInvalidate();
 
 public slots:
     void invalidate();

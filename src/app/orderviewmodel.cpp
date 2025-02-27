@@ -6,9 +6,9 @@
 #include "staffmodel.h"
 #include "usermodel.h"
 
-OrderViewModel::OrderViewModel(QAbstractListModel *sourceModel,
-                               QAbstractListModel *userModel,
-                               QAbstractListModel *staffModel,
+OrderViewModel::OrderViewModel(const QAbstractListModel *sourceModel,
+                               const QAbstractListModel *userModel,
+                               const QAbstractListModel *staffModel,
                                QObject *parent)
     : ProxyOrm::ProxyOrmModel{sourceModel,
                               {{OrderViewModel::IdRole, OrderModel::IdRole},
@@ -73,6 +73,8 @@ OrderViewModel::OrderViewModel(QAbstractListModel *sourceModel,
     // sort(OrderViewModel::StaffRateRole, Qt::SortOrder::AscendingOrder);
     // sort(OrderViewModel::CreatedByRole, Qt::SortOrder::AscendingOrder);
     // groupBy(OrderViewModel::CreatedByRole);
+
+    enabledAsync(true);
 }
 
 QHash<int, QByteArray> OrderViewModel::roleNames() const

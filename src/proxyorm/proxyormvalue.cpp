@@ -44,15 +44,13 @@ void ProxyOrm::ProxyOrmValue::invalidate()
     if (isAsync) {
         isStart = true;
         futureInvalidate = QtConcurrent::run(QThreadPool::globalInstance(), [this]() {
-                               QPair<bool, QVariant> pair;
-                               pair.second = performInvalidation();
-                               pair.first = !isCancel;
-                               return pair;
-                           }).then([this](QPair<bool, QVariant> pair) {
-            if (pair.first) {
-                mValue = pair.second;
+                               return performInvalidation();
+                           }).then([this](QVariant value) {
+            if (!isCancel) {
+                mValue = value;
                 emit changed();
             }
+            isStart = false;
         });
     } else {
         mValue = performInvalidation();
