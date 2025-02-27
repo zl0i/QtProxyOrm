@@ -7,6 +7,8 @@ ProxyOrm::FromSource::FromSource(const QAbstractListModel *sourceModel,
     , sourceModel(sourceModel)
     , mapRoles(mapRoles)
 {
+    enabledCache = false;
+
     connect(sourceModel, &QAbstractListModel::modelReset, this, [this]() {
         invalidateCache();
         emit changed(this->mapRoles.keys());

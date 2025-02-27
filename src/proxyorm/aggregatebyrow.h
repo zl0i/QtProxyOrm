@@ -9,6 +9,12 @@ namespace ProxyOrm {
 
 enum TypeAggregate { Count = 0, Sum, Avg, Min, Max, First, Last };
 
+template<typename T>
+T typedAggregate(T a, T b)
+{
+    return a + b;
+};
+
 class AggregateByRow : public ISource
 {
     Q_OBJECT
@@ -35,10 +41,10 @@ protected:
 
     virtual QVariant aggregate(QVariant value) const;
 
-    template<typename T>
-    T typedAggregate(T a, T b) const;
-
     bool isMoreComprasion(QVariant a, QVariant b) const;
+
+private:
+    mutable QHash<QString, QVariant> hash;
 
 private slots:
     void invalidate();

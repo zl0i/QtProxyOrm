@@ -49,7 +49,6 @@ protected:
     void groupBy(int role);
 
     void enabledAsync(bool enabled);
-    ;
 
 private:
     const QAbstractListModel *sourceModel = nullptr;

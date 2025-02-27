@@ -4,12 +4,14 @@ ProxyOrm::ISource::ISource() {}
 
 QVariant ProxyOrm::ISource::data(int row, int role) const
 {
-    if (!cache[row][role].isNull()) {
+    if (enabledCache && !cache[row][role].isNull()) {
         return cache[row][role];
     }
     QVariant result = templateData(row, role);
-    cache[row][role] = result;
-    return result;
+    if (enabledCache) {
+        cache[row][role] = result;
+    }
+    return templateData(row, role);
 }
 
 void ProxyOrm::ISource::invalidateCache(int row, int role)

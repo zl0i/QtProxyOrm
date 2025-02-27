@@ -53,6 +53,59 @@ private slots:
         qDebug() << "Starting ProxyOrmModel benchmark with" << ROW_COUNT << "rows";
     }
 
+    void benchmarkDataQStandardItemModel()
+    {
+        QStandardItemModel model;
+        model.insertRows(0, ROW_COUNT);
+        for (int i = 0; i < ROW_COUNT; ++i) {
+            QModelIndex idx = model.index(i, 0);
+            model.setData(idx,
+                          QString("Category%1").arg(i % 100),
+                          Qt::UserRole);                 // 100 уникальных категорий
+            model.setData(idx, i * 10, Qt::DisplayRole); // Значения 0, 10, 20, ...
+        }
+
+        QBENCHMARK
+        {
+            for (int i = 0; i < ROW_COUNT; ++i) {
+                model.data(model.index(i, 0), Qt::UserRole);
+            }
+        }
+    }
+
+    void benchmarkDataStandardListModel()
+    {
+        StandardListModel model(ROW_COUNT);
+        for (int i = 0; i < ROW_COUNT; ++i) {
+            QModelIndex idx = model.index(i, 0);
+            model.setData(idx,
+                          QString("Category%1").arg(i % 100),
+                          Qt::UserRole);                 // 100 уникальных категорий
+            model.setData(idx, i * 10, Qt::DisplayRole); // Значения 0, 10, 20, ...
+        }
+
+        QBENCHMARK
+        {
+            for (int i = 0; i < ROW_COUNT; ++i) {
+                model.data(model.index(i, 0), Qt::UserRole);
+            }
+        }
+    }
+
+    void benchmarkDataProxyOrmModel()
+    {
+        auto source = createTestModel(ROW_COUNT);
+        QMap<int, int> roles = {{Qt::UserRole, Qt::UserRole}};
+        PublicProxyOrmModel model(source, roles);
+
+        QBENCHMARK
+        {
+            for (int i = 0; i < ROW_COUNT; ++i) {
+                model.data(model.index(i, 0), Qt::UserRole);
+            }
+        }
+    }
+
     void benchmarkFilter()
     {
         StandardListModel *source = createTestModel(ROW_COUNT);

@@ -38,14 +38,20 @@ ProxyOrm::AggregateByRow &ProxyOrm::AggregateByRow::operator=(const AggregateByR
 QVariant ProxyOrm::AggregateByRow::templateData(int row, int) const
 {
     QVariant whereValue = sourceModel->data(sourceModel->index(row, 0), this->sourceRole);
-    return aggregate(whereValue);
+    if (hash.contains(whereValue.toString())) {
+        return hash.value(whereValue.toString());
+    } else {
+        auto value = aggregate(whereValue);
+        hash.insert(whereValue.toString(), value);
+        return value;
+    }
 }
 
-template<typename T>
-T ProxyOrm::AggregateByRow::typedAggregate(T a, T b) const
-{
-    return a + b;
-}
+// template<typename T>
+// T ProxyOrm::AggregateByRow::typedAggregate(T a, T b) const
+// {
+//     return a + b;
+// }
 
 QList<int> ProxyOrm::AggregateByRow::roles() const
 {

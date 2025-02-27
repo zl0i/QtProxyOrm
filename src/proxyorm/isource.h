@@ -19,6 +19,8 @@ public:
 protected:
     virtual QVariant templateData(int row, int role) const = 0;
 
+    bool enabledCache{true};
+
 private:
     mutable QHash<int, QHash<int, QVariant>> cache;
 
