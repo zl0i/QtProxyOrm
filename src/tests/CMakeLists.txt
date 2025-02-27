@@ -6,7 +6,7 @@ add_library(helpers STATIC
 )
 
 target_include_directories(helpers PUBLIC src)
-target_link_libraries(helpers Qt6::Core Qt6::Gui)
+target_link_libraries(helpers Qt6::Core Qt6::Gui proxyorm)
 
 add_subdirectory(TestProxyOrmValue)
 add_subdirectory(TestWhere)

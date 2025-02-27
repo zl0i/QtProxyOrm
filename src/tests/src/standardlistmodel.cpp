@@ -1,7 +1,7 @@
 #include "standardlistmodel.h"
 
 StandardListModel::StandardListModel(int row, QObject *parent)
-    : QAbstractListModel(parent)
+    : ProxyOrm::IndexedAbstractModel(parent)
 {
     list.resize(row);
 }
@@ -31,6 +31,15 @@ bool StandardListModel::setData(const QModelIndex &index, const QVariant &value,
     };
     emit dataChanged(index, index, {role});
     return true;
+}
+
+QVariant StandardListModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid() || index.row() >= list.size())
+        return QVariant();
+
+    QStandardItem *item = list.at(index.row());
+    return item ? item->data(role) : QVariant();
 }
 
 bool StandardListModel::insertRow(int row, QStandardItem *item)
@@ -67,4 +76,14 @@ void StandardListModel::clear()
     qDeleteAll(list);
     list.clear();
     endResetModel();
+}
+
+QModelIndex StandardListModel::byIndex(QVariant value) const
+{
+    for (int i = 0; i < list.size(); ++i) {
+        if (list.at(i) && list.at(i)->data(Qt::UserRole) == value) {
+            return createIndex(i, 0);
+        }
+    }
+    return QModelIndex();
 }

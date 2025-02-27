@@ -5,7 +5,9 @@
 #include <QObject>
 #include <QStandardItemModel>
 
-class StandardListModel : public QAbstractListModel
+#include "indexedabstractmodel.h"
+
+class StandardListModel : public ProxyOrm::IndexedAbstractModel
 {
 public:
     StandardListModel(int row, QObject *parent = nullptr);
@@ -15,14 +17,7 @@ public:
     int rowCount(const QModelIndex &index = QModelIndex{}) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override
-    {
-        if (!index.isValid() || index.row() >= list.size())
-            return QVariant();
-
-        QStandardItem *item = list.at(index.row());
-        return item ? item->data(role) : QVariant();
-    }
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
     bool insertRow(int row, QStandardItem *item);
 
@@ -34,6 +29,8 @@ public:
 
     // Очистка модели
     void clear();
+
+    QModelIndex byIndex(QVariant) const override;
 
 private:
     QList<QStandardItem *> list;
